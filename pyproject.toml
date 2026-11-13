@@ -94,7 +94,7 @@ config-settings-package = { gvec = { "cmake.define.GVEC_ADD_COMPILE_FLAGS_MACHIN
 # one entry per max-models package in [project], spelled exactly like this in every repo:
 # transitive max-models packages too, so freeofcharge's devel gets their devel branches
 cunumpy = { git = "https://github.com/max-models/cunumpy", branch = "devel" }
-freeofcharge = { git = "https://github.com/max-models/freeofcharge", branch = "claude/astra-plasma-physics-72n2n2" }
+freeofcharge = { git = "https://github.com/max-models/freeofcharge", branch = "devel" }
 maybempi = { git = "https://github.com/max-models/maybempi", branch = "devel" }
 methodcard = { git = "https://github.com/max-models/methodcard", branch = "devel" }
 plasma-plots = { git = "https://github.com/max-models/plasma-plots", branch = "devel" }
