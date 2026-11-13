@@ -104,6 +104,7 @@ class EquilibriumCoupling:
             restartstate=self.state,
             runpath=folder / f"t{time:.6g}",
             quiet=True,
+            loglevel="WARNING",
         )
         self.state = result.state
         geometry = GVECEquilibrium(result.state).transport_geometry(

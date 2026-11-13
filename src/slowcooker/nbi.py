@@ -25,13 +25,38 @@ import xarray as xr
 from slowcooker._profiling import PROFILE_TAGS
 from slowcooker.config import profile
 
-__all__ = ["NBICoupling", "nbi_source", "plasma_from_state"]
+__all__ = ["NBICoupling", "nbi_source", "plasma_from_state", "toroidal_radius"]
 
 KEV = 1.0e3
 """eV per keV."""
 
 
-def plasma_from_state(state: xr.Dataset) -> Any:
+def toroidal_radius(equilibrium: Any, rho, shells: int = 64) -> np.ndarray:
+    r"""Return $\rho_\mathrm{tor} = \sqrt{\Phi/\Phi_b}$ at the radii ``rho`` of an equilibrium.
+
+    For an equilibrium whose radius is the poloidal one
+    (``radial_coordinate == "poloidal"``, freeofcharge's axisymmetric
+    `Equilibrium`), $\Phi(\psi) = \int q\, d\psi$ with $\psi_n = \rho_\mathrm{pol}^2$
+    and $q$ from ``flux_surfaces`` on ``shells`` shells (extended linearly to the
+    axis and the edge); otherwise ``rho`` is returned as it is.
+    """
+    rho = np.asarray(rho, dtype=float)
+    if getattr(equilibrium, "radial_coordinate", "toroidal") != "poloidal":
+        return rho
+    surfaces = equilibrium.flux_surfaces(np.linspace(0.0, 1.0, shells + 1))
+    psi = surfaces.rho**2
+    q = np.asarray(surfaces.safety_factor, dtype=float)
+    q_axis = q[0] - psi[0] * (q[1] - q[0]) / (psi[1] - psi[0])
+    q_edge = q[-1] + (1.0 - psi[-1]) * (q[-1] - q[-2]) / (psi[-1] - psi[-2])
+    nodes = np.concatenate([[0.0], psi, [1.0]])
+    values = np.concatenate([[q_axis], q, [q_edge]])
+    flux = np.concatenate(
+        [[0.0], np.cumsum(0.5 * (values[1:] + values[:-1]) * np.diff(nodes))]
+    )
+    return np.sqrt(np.interp(rho**2, nodes, flux / flux[-1]))
+
+
+def plasma_from_state(state: xr.Dataset, radial_coordinate: str = "toroidal") -> Any:
     """Return freeofcharge's `Plasma` from slowcooker profiles at one time.
 
     The main ion is TORAX's (mass number from ``A_i``, charge 1); the impurities
@@ -39,10 +64,13 @@ def plasma_from_state(state: xr.Dataset) -> Any:
     set so that the plasma is quasi-neutral.
 
     Args:
-        state: `slowcooker.snapshot` of a TORAX output.
+        state: `slowcooker.snapshot` of a TORAX output (over the toroidal
+            radius), or that state interpolated to other toroidal radii with the
+            radii the `Plasma` is to use in ``state.attrs["grid"]``.
+        radial_coordinate: Which flux the `Plasma`'s radius is the root of.
 
     Returns:
-        A ``freeofcharge.Plasma`` over the toroidal flux radius.
+        A ``freeofcharge.Plasma``.
     """
     import freeofcharge as foc
 
@@ -57,12 +85,12 @@ def plasma_from_state(state: xr.Dataset) -> Any:
     main = np.maximum(n_e - z_impurity * n_impurity, 0.0)
     ions["main"] = foc.IonSpecies(int(round(float(state["A_i"]))), 1, main)
     return foc.Plasma(
-        rho,
+        state.attrs.get("grid", rho),
         n_e,
         state["T_e"].values * KEV,
         state["T_i"].values * KEV,
         ions=ions,
-        radial_coordinate="toroidal",
+        radial_coordinate=radial_coordinate,
     )
 
 
@@ -119,9 +147,10 @@ class NBICoupling:
     """Recompute the beams with freeofcharge from the plasma before each segment.
 
     Args:
-        equilibrium: The ``freeofcharge`` equilibrium (e.g. a
-            ``GriddedEquilibrium`` of a GVEC one) on the same toroidal flux
-            radius as TORAX's geometry.
+        equilibrium: The ``freeofcharge`` equilibrium of TORAX's geometry: a
+            3D one on the toroidal flux radius (e.g. a ``GriddedEquilibrium`` of
+            a GVEC one), or an axisymmetric `Equilibrium` on the poloidal one,
+            whose profiles are mapped between the two radii (`toroidal_radius`).
         beams: The beams, as ``freeofcharge.run.run_nbi`` takes them.
         rho_edges: Shell edges of the deposition.
         options: Further arguments of ``run_nbi`` (``markers``, ``seed``, ...).
@@ -144,13 +173,25 @@ class NBICoupling:
         from freeofcharge.run import run_nbi
 
         options = {"torque": False, **self.options}
+        coordinate = getattr(self.equilibrium, "radial_coordinate", "toroidal")
+        if coordinate == "poloidal":
+            grid = np.linspace(0.0, 1.0, 51)
+            mapped = state.interp(rho=toroidal_radius(self.equilibrium, grid))
+            mapped.attrs["grid"] = grid
+            plasma = plasma_from_state(mapped, radial_coordinate="poloidal")
+        else:
+            plasma = plasma_from_state(state)
         result = run_nbi(
             self.equilibrium,
-            plasma_from_state(state),
+            plasma,
             self.beams,
             rho_edges=np.asarray(self.rho_edges, dtype=float),
             **options,
         )
+        if coordinate == "poloidal":
+            result = result.assign_coords(
+                rho=toroidal_radius(self.equilibrium, result["rho"].values)
+            )
         self.results[time] = result
         # constant over the segment: the same profile at its start and much later
         return nbi_source(

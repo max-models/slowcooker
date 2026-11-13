@@ -81,6 +81,8 @@ def test_tokamak_steady_state_and_the_output_layout():
     data = profiles(output)
     assert set(data.T_e.dims) == {"t", "rho"}
     assert data.t.attrs["units"] == "s" and data.T_e.attrs["units"] == "keV"
+    assert data.T_e.attrs["long_name"] == "$T_e$"
+    assert data.chi_turb_i.attrs["long_name"] == r"$\chi_i$"
     assert data.p_generic_heat_e.dims == ("t", "rho")
     assert "P_generic_heat_total" in data and data.P_generic_heat_total.dims == ("t",)
     final = snapshot(output)

@@ -63,7 +63,7 @@ def merge(base: Mapping[str, Any], overrides: Mapping[str, Any]) -> dict[str, An
 
 
 def base_config(
-    geometry: xr.Dataset | Mapping[float, xr.Dataset],
+    geometry: xr.Dataset | Mapping[Any, Any],
     *,
     density: float = 3.0e19,
     temperature: tuple[float, float] = (2.0, 0.1),
@@ -78,7 +78,8 @@ def base_config(
 
     Args:
         geometry: Flux-surface averages (`slowcooker.geometry`), one dataset or
-            datasets by time.
+            datasets by time; or a TORAX geometry section (with ``model_name``),
+            e.g. from `slowcooker.geometry.eqdsk_geometry`.
         density: Flat electron density [m^-3].
         temperature: Initial central and edge temperatures of electrons and
             ions [keV]; the edge value is also the boundary condition. The
@@ -115,7 +116,11 @@ def base_config(
             "evolve_ion_heat": True,
             "evolve_electron_heat": True,
         },
-        "geometry": geometry_config(geometry, n_rho=n_rho),
+        "geometry": (
+            {**geometry, "n_rho": n_rho}
+            if isinstance(geometry, Mapping) and "model_name" in geometry
+            else geometry_config(geometry, n_rho=n_rho)
+        ),
         "sources": {
             "generic_heat": {
                 "P_total": heating,

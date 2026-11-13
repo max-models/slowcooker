@@ -38,6 +38,7 @@ from slowcooker._profiling import PROFILE_TAGS
 __all__ = [
     "chease_columns",
     "circular_geometry",
+    "eqdsk_geometry",
     "geometry_config",
     "gvec_geometry",
 ]
@@ -246,3 +247,34 @@ def gvec_geometry(
         equilibrium = GVECEquilibrium(equilibrium)
     rho = np.linspace(0.02, 1.0, 50) if rho is None else np.asarray(rho, float)
     return equilibrium.transport_geometry(rho, angles=angles)
+
+
+def eqdsk_geometry(
+    equilibrium: Any, directory: str | Any, *, name: str = "equilibrium.geqdsk"
+) -> dict[str, Any]:
+    r"""Return the TORAX geometry section of an axisymmetric freeofcharge equilibrium.
+
+    The equilibrium is written as a G-EQDSK file into ``directory`` (with $q$,
+    the axis field and the plasma current, which TORAX needs to identify the
+    sign conventions), and TORAX reads it with COCOS 1: freeofcharge's $\psi$ is
+    per radian and grows outwards.
+
+    Args:
+        equilibrium: A ``freeofcharge.Equilibrium``.
+        directory: Folder for the file.
+        name: File name.
+
+    Returns:
+        The ``geometry`` section (``model_name = "eqdsk"``) for `slowcooker.base_config`.
+    """
+    from pathlib import Path
+
+    folder = Path(directory)
+    folder.mkdir(parents=True, exist_ok=True)
+    equilibrium.to_geqdsk(folder / name)
+    return {
+        "model_name": "eqdsk",
+        "geometry_file": name,
+        "geometry_directory": str(folder),
+        "cocos": 1,
+    }

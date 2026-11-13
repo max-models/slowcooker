@@ -34,6 +34,30 @@ that starts at ``time`` [s]; ``state`` is `snapshot` of the profiles there."""
 
 _RADII = ("rho_norm", "rho_cell_norm", "rho_face_norm")
 
+#: Labels of TORAX's common outputs, for the axes and legends of plasma-plots.
+LONG_NAMES = {
+    "T_e": "$T_e$",
+    "T_i": "$T_i$",
+    "n_e": "$n_e$",
+    "n_i": "$n_i$",
+    "q": "$q$",
+    "psi": r"$\psi$",
+    "pressure_total": "pressure",
+    "chi_turb_e": r"$\chi_e$",
+    "chi_turb_i": r"$\chi_i$",
+    "chi_neo_e": r"$\chi_{e,\mathrm{neo}}$",
+    "chi_neo_i": r"$\chi_{i,\mathrm{neo}}$",
+    "p_nbi_e": "beam heating of the electrons",
+    "p_nbi_i": "beam heating of the ions",
+    "p_generic_heat_e": "heating of the electrons",
+    "p_generic_heat_i": "heating of the ions",
+    "p_ei_exchange_e": "electron-ion exchange",
+    "j_toroidal_total": "toroidal current density",
+    "W_thermal_total": "stored thermal energy",
+    "P_nbi_total": "beam power",
+    "tau_E": r"$\tau_E$",
+}
+
 
 def _torax():
     import torax
@@ -72,7 +96,8 @@ def profiles(output: xr.DataTree) -> xr.Dataset:
     TORAX keeps its profiles on three grids (cell centres with the axis and the
     edge, the cells, the faces); here every profile is interpolated linearly
     onto the first, named ``rho``, holding the outermost values of the cell
-    grid out to the axis and the edge (the normalised toroidal flux radius). The
+    grid out to the axis and the edge. The common profiles get a ``long_name``
+    for the plots (`LONG_NAMES`) (the normalised toroidal flux radius). The
     scalars come along over ``t``. Units are kept in the ``units`` attributes.
 
     Args:
@@ -107,6 +132,9 @@ def profiles(output: xr.DataTree) -> xr.Dataset:
         if set(array.dims) <= {"time"}:
             variables[str(name)] = array
     dataset = xr.Dataset(variables).rename({"time": "t", "rho_norm": "rho"})
+    for name, label in LONG_NAMES.items():
+        if name in dataset:
+            dataset[name].attrs.setdefault("long_name", label)
     dataset["t"].attrs.update(long_name="time", units="s")
     dataset["rho"].attrs.update(
         long_name=r"$\rho = \sqrt{\Phi/\Phi_b}$", units="", radial_coordinate="toroidal"

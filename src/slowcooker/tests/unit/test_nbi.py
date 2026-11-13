@@ -73,3 +73,67 @@ def test_nbi_coupling_on_w7x():
     # interpolating 25 Monte Carlo shells onto its 15 cells (2.2 % on CI, 1-2 % locally)
     np.testing.assert_allclose(float(data.P_nbi_total.isel(t=-1)), absorbed, rtol=5e-2)
     assert float(data.T_e.isel(t=-1, rho=0)) > 0.1
+
+
+def test_toroidal_radius_against_torax(tmp_path):
+    """The poloidal-to-toroidal map of a tokamak against TORAX's psi on its toroidal grid."""
+    import freeofcharge as foc
+    from torax._src.geometry import eqdsk
+
+    from slowcooker.geometry import eqdsk_geometry
+    from slowcooker.nbi import toroidal_radius
+
+    equilibrium = foc.Equilibrium.solovev(1.65, 0.5, 1.6, 2.5, q_axis=1.2)
+    section = eqdsk_geometry(equilibrium, tmp_path)
+    section.pop("model_name")
+    geo = eqdsk.EQDSKConfig(
+        **section, n_rho=40, last_surface_factor=1.0, n_surfaces=200
+    )._build_geometry()
+    # TORAX's psi [Wb] is 2 pi times freeofcharge's (per radian)
+    flux = 2 * np.pi * (equilibrium.psi_boundary - equilibrium.psi_axis)
+    psi_n = np.clip(np.asarray(geo.psi) / flux, 0.0, 1.0)
+    mapped = toroidal_radius(equilibrium, np.sqrt(psi_n))
+    # outside rho = 0.12, where TORAX smooths psi towards its axis form
+    rho = np.asarray(geo.rho_norm)
+    away = rho > 0.12
+    np.testing.assert_allclose(mapped[away], rho[away], atol=1e-4)
+    ends = toroidal_radius(equilibrium, [0.0, 1.0])
+    np.testing.assert_allclose(ends, [0.0, 1.0])
+    # a 3D (toroidal-flux) equilibrium passes through unchanged
+    assert toroidal_radius(object(), [0.3])[0] == 0.3
+
+
+def test_nbi_coupling_in_a_tokamak(tmp_path):
+    """SC4, tokamak: freeofcharge's Solov'ev equilibrium, its EQDSK in TORAX, a tangential beam."""
+    import freeofcharge as foc
+
+    from slowcooker import base_config, merge, profiles, run_coupled
+    from slowcooker.geometry import eqdsk_geometry
+    from slowcooker.nbi import NBICoupling
+
+    equilibrium = foc.Equilibrium.solovev(1.65, 0.5, 1.6, 2.5, q_axis=1.2)
+    origin, direction = foc.tangential_injection(1.3, 3.5)
+    beam = foc.NeutralBeam.gaussian(
+        origin, direction, 60e3, 2.5e6, mass_number=2, width=0.1,
+        divergence=0.01, markers=400, seed=1,
+    )  # fmt: skip
+    config = merge(
+        base_config(
+            eqdsk_geometry(equilibrium, tmp_path),
+            density=4e19,
+            heating=0.0,
+            chi=0.5,
+            t_final=0.2,
+            dt=0.05,
+            n_rho=15,
+        ),  # fmt: skip
+        {"sources": {"generic_heat": None}},
+    )
+    coupling = NBICoupling(equilibrium, beam, rho_edges=np.linspace(0, 1, 16))
+    data = profiles(run_coupled(config, [coupling], [0.0, 0.1, 0.2]))
+    result = coupling.results[0.1]
+    absorbed = float(result["absorbed_power"])
+    assert 1.5e6 < absorbed <= 2.5e6
+    np.testing.assert_allclose(float(data.P_nbi_total.isel(t=-1)), absorbed, rtol=5e-2)
+    # the shells came back on the toroidal radius
+    assert result.rho.values[-1] < 1.0 and np.all(np.diff(result.rho.values) > 0)

@@ -39,10 +39,11 @@ optional-dependencies.docs = [
   "freeofcharge[gvec]",
   "griffe",
   "ipykernel",
+  "kaleido",
   "matplotlib>=3.10.9",
   "nbclient>=0.11",
   "nbformat>=5.11.1",
-  "plasma-plots>=0.2.5",
+  "plasma-plots[web]>=0.2.5",
 ]
 optional-dependencies.gvec = [ "freeofcharge[gvec]" ]
 optional-dependencies.test = [ "pytest", "pytest-cov" ]
@@ -81,13 +82,19 @@ run.omit = [ "*/tests/*" ]
 run.source = [ "slowcooker" ]
 report.show_missing = true
 
+# GVEC compiles with -march=native by default; a wheel built on one CI runner and restored from
+# the uv cache on an older CPU dies with SIGILL. Build it for x86-64-v2 instead (config settings
+# are part of uv's cache key, so a native wheel is not reused).
+[tool.uv]
+config-settings-package = { gvec = { "cmake.define.GVEC_ADD_COMPILE_FLAGS_MACHINE" = "-march=x86-64-v2" } }
+
 # PRs to devel test against the devel branches of the max-models packages (pinned in
 # uv.lock); PRs to main and the release use PyPI only (CI sets UV_NO_SOURCES).
 [tool.uv.sources]
 # one entry per max-models package in [project], spelled exactly like this in every repo:
 # transitive max-models packages too, so freeofcharge's devel gets their devel branches
 cunumpy = { git = "https://github.com/max-models/cunumpy", branch = "devel" }
-freeofcharge = { git = "https://github.com/max-models/freeofcharge", branch = "devel" }
+freeofcharge = { git = "https://github.com/max-models/freeofcharge", branch = "claude/astra-plasma-physics-72n2n2" }
 maybempi = { git = "https://github.com/max-models/maybempi", branch = "devel" }
 methodcard = { git = "https://github.com/max-models/methodcard", branch = "devel" }
 plasma-plots = { git = "https://github.com/max-models/plasma-plots", branch = "devel" }
