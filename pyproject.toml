@@ -39,10 +39,11 @@ optional-dependencies.docs = [
   "freeofcharge[gvec]",
   "griffe",
   "ipykernel",
+  "kaleido",
   "matplotlib>=3.10.9",
   "nbclient>=0.11",
   "nbformat>=5.11.1",
-  "plasma-plots>=0.2.5",
+  "plasma-plots[web]>=0.2.5",
 ]
 optional-dependencies.gvec = [ "freeofcharge[gvec]" ]
 optional-dependencies.test = [ "pytest", "pytest-cov" ]
