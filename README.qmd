@@ -53,7 +53,7 @@ from slowcooker.data import gvec_equilibrium
 
 geometry = gvec_geometry(gvec_equilibrium("w7x"), rho=np.linspace(0.02, 1.0, 40))
 config = base_config(geometry, density=3e19, heating=2e6, chi=0.5, t_final=1.0)
-data = profiles(run(config))       # xarray over t and rho
+data = profiles(run(config))  # xarray over t and rho
 print(data.T_e.isel(t=-1).values)
 ```
 
