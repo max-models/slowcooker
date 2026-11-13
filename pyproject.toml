@@ -82,6 +82,12 @@ run.omit = [ "*/tests/*" ]
 run.source = [ "slowcooker" ]
 report.show_missing = true
 
+# GVEC compiles with -march=native by default; a wheel built on one CI runner and restored from
+# the uv cache on an older CPU dies with SIGILL. Build it for x86-64-v2 instead (config settings
+# are part of uv's cache key, so a native wheel is not reused).
+[tool.uv]
+config-settings-package = { gvec = { "cmake.define.GVEC_ADD_COMPILE_FLAGS_MACHINE" = "-march=x86-64-v2" } }
+
 # PRs to devel test against the devel branches of the max-models packages (pinned in
 # uv.lock); PRs to main and the release use PyPI only (CI sets UV_NO_SOURCES).
 [tool.uv.sources]
