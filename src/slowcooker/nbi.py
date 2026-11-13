@@ -82,6 +82,9 @@ def nbi_source(
 
     Returns:
         The ``sources`` section with the ``nbi`` entry, for `slowcooker.merge`.
+        TORAX interpolates the profiles onto its cells, so the power it deposits
+        equals freeofcharge's to the interpolation error (a few percent for noisy
+        profiles on a coarse TORAX grid).
     """
     results = {0.0: nbi} if isinstance(nbi, xr.Dataset) else nbi
     channels: dict[str, dict] = {"power_density_e": {}, "power_density_i": {}}
