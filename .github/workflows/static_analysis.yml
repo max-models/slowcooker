@@ -44,6 +44,9 @@ jobs:
           python-version: "3.12"
           enable-cache: true
 
+      - name: Install the compilers and libraries GVEC is built with
+        run: sudo apt-get update && sudo apt-get install -y gfortran cmake pkg-config liblapack-dev libnetcdff-dev
+
       - name: Install project
         run: uv sync --extra dev
 

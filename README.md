@@ -1,120 +1,83 @@
-# template-python
+# slowcooker
 
 
 <!-- README.md is generated from README.qmd: edit the .qmd and run `make readme`. -->
 
-[![Tests](https://github.com/max-models/template-python/actions/workflows/test_pytest.yml/badge.svg)](https://github.com/max-models/template-python/actions/workflows/test_pytest.yml)
+[![Tests](https://github.com/max-models/slowcooker/actions/workflows/test_pytest.yml/badge.svg)](https://github.com/max-models/slowcooker/actions/workflows/test_pytest.yml)
 [![Static
-analysis](https://github.com/max-models/template-python/actions/workflows/static_analysis.yml/badge.svg)](https://github.com/max-models/template-python/actions/workflows/static_analysis.yml)
-[![Docs](https://github.com/max-models/template-python/actions/workflows/docs.yml/badge.svg)](https://max-models.github.io/template-python/)
-[![codecov](https://codecov.io/gh/max-models/template-python/branch/main/graph/badge.svg)](https://codecov.io/gh/max-models/template-python)
-[![PyPI](https://img.shields.io/pypi/v/template-python.png)](https://pypi.org/project/template-python/)
-[![Python](https://img.shields.io/pypi/pyversions/template-python.png)](https://pypi.org/project/template-python/)
+analysis](https://github.com/max-models/slowcooker/actions/workflows/static_analysis.yml/badge.svg)](https://github.com/max-models/slowcooker/actions/workflows/static_analysis.yml)
+[![Docs](https://github.com/max-models/slowcooker/actions/workflows/docs.yml/badge.svg)](https://max-models.github.io/slowcooker/)
+[![codecov](https://codecov.io/gh/max-models/slowcooker/branch/main/graph/badge.svg)](https://codecov.io/gh/max-models/slowcooker)
+[![PyPI](https://img.shields.io/pypi/v/slowcooker.png)](https://pypi.org/project/slowcooker/)
+[![Python](https://img.shields.io/pypi/pyversions/slowcooker.png)](https://pypi.org/project/slowcooker/)
 
-Template repository for Python projects: a `src/` package with a console
-entry point, `pytest` tests, GitHub Actions for tests, static analysis,
-example notebooks, documentation and PyPI publishing, and an
-[Astro](https://astro.build/) +
-[Starlight](https://starlight.astro.build/) documentation site.
+1.5D core transport for tokamaks and stellarators.
+[TORAX](https://github.com/google-deepmind/torax) (unchanged, pinned)
+solves the transport equations; slowcooker gives it
 
-Documentation: <https://max-models.github.io/template-python/>
+- the **geometry of any equilibrium**: flux-surface averages from
+  [GVEC](https://gitlab.mpcdf.mpg.de/gvec-group/gvec) for tokamaks and
+  stellarators, passed in through TORAX’s CHEASE format, in memory;
+- **neutral beams** from
+  [freeofcharge](https://github.com/max-models/freeofcharge): heating,
+  fuelling and current recomputed from the plasma between segments of
+  the run;
+- the **equilibrium re-solved** with TORAX’s pressure (the half
+  dimension of 1.5D);
+- a **stellarator neoclassical** transport model (1/ν and √ν regimes,
+  ambipolar $E_r$) as a TORAX plug-in; its prefactors are still to be
+  verified against the literature and DKES/MONKES;
+- the profiles back as one xarray dataset over `t` and `rho`, ready for
+  [plasma-plots](https://github.com/max-models/plasma-plots), and
+  parameter scans.
 
-## Use the template
-
-Create a repository from this template, then rename the package:
-
-``` bash
-bash setup_project.sh my-app
-rm setup_project.sh
-```
-
-This replaces `template-python` with `my-app` everywhere, moves
-`src/app` to `src/my_app`, and points the entry point, tests and docs at
-it.
+Documentation: <https://max-models.github.io/slowcooker/>
 
 ## Install
 
-With [uv](https://docs.astral.sh/uv/):
+slowcooker needs Python 3.12 or newer (TORAX’s requirement). GVEC is
+built from source, which needs a Fortran compiler and netCDF-Fortran (on
+Debian/Ubuntu:
+`apt install gfortran cmake pkg-config liblapack-dev libnetcdff-dev`).
 
 ``` bash
-make install    # uv sync --extra dev, plus the pre-commit hooks
-uv run template-python
+make install                 # uv sync --extra dev, plus the pre-commit hooks
+pip install -e ".[gvec]"     # or with pip
 ```
 
-Or create and activate a Python environment (3.10 or newer):
+## Example
 
-``` bash
-python -m venv env
-source env/bin/activate
-pip install --upgrade pip
+Heat transport in W7-X with constant diffusivities, on the GVEC
+equilibrium that comes with slowcooker:
+
+``` python
+import numpy as np
+
+from slowcooker import base_config, gvec_geometry, profiles, run
+from slowcooker.data import gvec_equilibrium
+
+geometry = gvec_geometry(gvec_equilibrium("w7x"), rho=np.linspace(0.02, 1.0, 40))
+config = base_config(geometry, density=3e19, heating=2e6, chi=0.5, t_final=1.0)
+data = profiles(run(config))  # xarray over t and rho
+print(data.T_e.isel(t=-1).values)
 ```
 
-Install the code and requirements with pip:
+`base_config` writes a TORAX config dictionary; change any part of it
+with `slowcooker.merge`. Couple freeofcharge’s beams or a GVEC re-solve
+with `slowcooker.run_coupled` and `slowcooker.nbi.NBICoupling` or
+`slowcooker.equilibrium.EquilibriumCoupling`; see the examples in the
+documentation.
 
-``` bash
-pip install -e .
-```
-
-Run the code with:
-
-``` bash
-template-python
-```
-
-The `test`, `docs` and `dev` extras install the test runner, the
-documentation tooling and the linters:
-
-``` bash
-pip install -e ".[dev]"
-```
+The command `slowcooker case.py -o profiles.nc` runs the `CONFIG`
+dictionary of a Python file and writes the profiles.
 
 ## Development
 
-Formatting and linting use [ruff](https://docs.astral.sh/ruff/), type
-checking [pyright](https://microsoft.github.io/pyright/), run by
-[pre-commit](https://pre-commit.com/) and in CI:
-
 ``` bash
-make lint     # ruff check, ruff format --check, pyright
+make lint     # ruff check, ruff format --check, ssort, pyright
 make test     # pytest with coverage
+make docs-dev # the documentation site, live
 ```
 
-Commit messages follow [Conventional
-Commits](https://www.conventionalcommits.org/); see
-[CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Build docs
-
-The documentation in `docs/` is an Astro + Starlight site: hand-written
-pages, the notebooks in `tutorials/` executed and published as pages,
-complete Python scripts in `examples/` published with their plots, and
-the API reference generated from the docstrings with
-[starlight-pydocs](https://ewels.github.io/starlight-pydocs/). It needs
-Node 22 or newer.
-
-``` bash
-make docs-install     # npm packages and the Python docs extra
-make docs-notebooks   # execute tutorials/*.ipynb and convert them to pages
-make docs-examples    # run examples/*.py and publish their plots
-make docs-dev         # live preview at http://localhost:4321/template-python/
-make docs-build       # the static site in docs/dist
-```
-
-## Build the README
-
-`README.md` is rendered from `README.qmd` with
-[Quarto](https://quarto.org/):
-
-``` bash
-make readme
-```
-
-## Releases
-
-Before merging a release to `main`, update the version in
-`pyproject.toml`, `src/app/__init__.py` and `CITATION.cff` (including
-its release date), and add the release notes to `CHANGELOG.md`. The push
-to `main` creates a GitHub release with a `vX.Y.Z` tag and publishes the
-package to PyPI with trusted publishing (OIDC). The one-time PyPI and
-GitHub configuration is described in the [publishing
-tutorial](https://max-models.github.io/template-python/development/publishing/).
+Profiling regions are tagged `slowcooker` (opt-in, see
+[scope-profiler](https://github.com/max-models/scope-profiler)).

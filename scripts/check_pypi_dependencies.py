@@ -29,12 +29,12 @@ import argparse
 import json
 import sys
 import time
+import tomllib
 import urllib.error
 import urllib.request
 from collections.abc import Callable
 from pathlib import Path
 
-import tomllib
 from packaging.requirements import InvalidRequirement, Requirement
 from packaging.utils import canonicalize_name
 from packaging.version import InvalidVersion, Version

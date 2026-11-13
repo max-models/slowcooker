@@ -24,14 +24,18 @@ jobs:
   docs:
     uses: max-models/starlight-theme/.github/workflows/docs.yml@v0
     with:
+      # GVEC is built from source: a Fortran compiler and netCDF-Fortran
+      apt-packages: gfortran cmake pkg-config liblapack-dev libnetcdff-dev
+      extras: docs gvec
       pre-build: uv run python docs/tools/examples.py
       smoke-paths: |
         getting-started/installation/index.html
         examples/index.html
-        examples/example-tutorial/index.html
+        examples/gvec-geometry/index.html
+        examples/nbi-heating/index.html
         example-scripts/index.html
-        example-scripts/sine-wave/index.html
-        api/app/index.html
-        api/app/main/index.html
-        examples/example-tutorial/example_tutorial.ipynb
-        example-scripts/sine-wave/plot-1.png
+        example-scripts/w7x-coupled/index.html
+        api/slowcooker/index.html
+        api/slowcooker/geometry/index.html
+        examples/gvec-geometry/gvec_geometry.ipynb
+        example-scripts/w7x-coupled/plot-1.png

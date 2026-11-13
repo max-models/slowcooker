@@ -1,18 +1,18 @@
 // @ts-check
 // The shared max-models docs setup (@max-models/starlight-theme): served at
-// https://max-models.github.io/template-python/, with math, the API reference and a link check.
+// https://max-models.github.io/slowcooker/, with math, the API reference and a link check.
 import { defineDocs } from '@max-models/starlight-theme';
 
 export default defineDocs({
-	repo: 'template-python',
-	title: 'template-python',
-	description: 'Template repository for Python projects.',
-	pythonPackage: 'app',
+	repo: 'slowcooker',
+	title: 'slowcooker',
+	description: '1.5D core transport for tokamaks and stellarators on TORAX.',
+	pythonPackage: 'slowcooker',
 	nav: [
 		{ label: 'Getting started', link: '/getting-started/installation/' },
 		{ label: 'Examples', link: '/examples/' },
 		{ label: 'Development', link: '/development/docs/' },
-		{ label: 'API', link: '/api/app/' },
+		{ label: 'API', link: '/api/slowcooker/' },
 	],
 	sidebar: [
 		{

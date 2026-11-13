@@ -65,7 +65,7 @@ def build_example(source: Path, order: int) -> tuple[str, str]:
         filename = f"plot-{index}.png"
         plt.figure(number).savefig(output / filename, dpi=150, bbox_inches="tight")
         plots.append(
-            f"![Plot {index} from {title}](/template-python/example-scripts/{slug}/{filename})"
+            f"![Plot {index} from {title}](/slowcooker/example-scripts/{slug}/{filename})"
         )
     plt.close("all")
     page = [
@@ -101,9 +101,7 @@ def main() -> None:
     for order, source in enumerate(examples, start=1):
         title, summary = build_example(source, order)
         slug = re.sub(r"[^a-z0-9]+", "-", source.stem.lower()).strip("-")
-        listing.append(
-            f"- [{title}](/template-python/example-scripts/{slug}/): {summary}"
-        )
+        listing.append(f"- [{title}](/slowcooker/example-scripts/{slug}/): {summary}")
         print(f"[examples] {source} -> {CONTENT / slug}.mdx")
     CONTENT.mkdir(parents=True, exist_ok=True)
     (CONTENT / "index.md").write_text(
