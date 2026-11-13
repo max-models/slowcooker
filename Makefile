@@ -41,7 +41,7 @@ docs-notebooks:  ## execute the changed notebooks and convert all of them (FORCE
 docs-examples:  ## run the example scripts and generate pages with their plots
 	$(PYTHON) docs/tools/examples.py
 
-docs-dev:  ## live preview at http://localhost:4321/template-python/
+docs-dev:  ## live preview at http://localhost:4321/slowcooker/
 	$(NOTEBOOKS) convert
 	$(PYTHON) docs/tools/examples.py
 	cd docs && $(DOCS_ENV) DOCS_VALIDATE_LINKS=false npm run dev

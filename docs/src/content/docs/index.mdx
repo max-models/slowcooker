@@ -1,44 +1,43 @@
 ---
-title: template-python
-description: Template repository for Python projects.
+title: slowcooker
+description: 1.5D core transport for tokamaks and stellarators on TORAX, with GVEC geometry and freeofcharge beams.
 template: splash
 hero:
-  tagline: A starting point for a Python package with tests, CI, examples and an Astro documentation site.
+  tagline: 1.5D core transport for tokamaks and stellarators. TORAX solves; slowcooker brings the GVEC geometry, the neutral beams and the equilibrium.
   actions:
     - text: Get started
-      link: /template-python/getting-started/installation/
+      link: /slowcooker/getting-started/installation/
       icon: right-arrow
     - text: View on GitHub
-      link: https://github.com/max-models/template-python
+      link: https://github.com/max-models/slowcooker
       icon: external
       variant: minimal
 ---
 
 import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-## What is included
+## What it does
 
 <CardGrid>
-	<Card title="Package layout" icon="open-book">
-		A `src/` layout with a console entry point, `pytest` tests and a `pyproject.toml` ready for PyPI.
+	<Card title="Any geometry" icon="puzzle">
+		Flux-surface averages of a GVEC equilibrium, tokamak or stellarator, go into TORAX through its CHEASE format, in memory, without changing TORAX.
 	</Card>
-	<Card title="Continuous integration" icon="rocket">
-		GitHub Actions for tests, static analysis, notebook execution, documentation and PyPI publishing.
+	<Card title="Neutral beams" icon="rocket">
+		freeofcharge deposits the beams and slows the fast ions down; the heating, fuelling and current follow the plasma from one segment of the run to the next.
 	</Card>
-	<Card title="Examples" icon="document">
-		Jupyter notebooks in `tutorials/` are executed and published as pages of this site, and
-		complete Python scripts in `examples/` are shown with their plots.
+	<Card title="The half dimension" icon="random">
+		GVEC is re-solved with TORAX's pressure, and the geometry factors follow.
 	</Card>
-	<Card title="API reference" icon="setting">
-		Every module, class and function is documented from the docstrings with starlight-pydocs.
+	<Card title="Stellarator transport" icon="setting">
+		A neoclassical model for the 1/ν and √ν regimes with the ambipolar radial electric field, as a TORAX plug-in (prefactors still to be verified).
 	</Card>
 </CardGrid>
 
 ## Start here
 
 <CardGrid>
-	<LinkCard title="Installation" href="/template-python/getting-started/installation/" description="Create an environment and install the package." />
-	<LinkCard title="Quickstart" href="/template-python/getting-started/quickstart/" description="Run the command line entry point." />
-	<LinkCard title="Examples" href="/template-python/examples/" description="Executed notebooks and complete scripts with their outputs." />
-	<LinkCard title="API reference" href="/template-python/api/app/" description="Generated from the docstrings." />
+	<LinkCard title="Installation" href="/slowcooker/getting-started/installation/" description="Create an environment and install the package." />
+	<LinkCard title="Quickstart" href="/slowcooker/getting-started/quickstart/" description="A W7-X run in a few lines." />
+	<LinkCard title="Examples" href="/slowcooker/examples/" description="Executed notebooks and complete scripts with their outputs." />
+	<LinkCard title="API reference" href="/slowcooker/api/slowcooker/" description="Generated from the docstrings." />
 </CardGrid>
