@@ -7,6 +7,13 @@ format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Tokamaks from freeofcharge's axisymmetric equilibria: `geometry.eqdsk_geometry` writes the
+  G-EQDSK file that TORAX reads (COCOS 1); `base_config` takes such a geometry section;
+  `nbi.toroidal_radius` maps freeofcharge's poloidal radius to TORAX's toroidal one
+  ($\Phi = \int q\,d\psi$), and `NBICoupling` uses it, so the beam-driven current reaches TORAX
+  in a tokamak. Example notebook "Beams in a tokamak".
+- The re-solve interval of `EquilibriumCoupling`, studied in "Pressure and geometry": on W7-X one
+  re-solve per confinement time leaves below 1e-4 in $T_e$. GVEC runs at log level WARNING.
 - slowcooker: 1.5D core transport for tokamaks and stellarators on TORAX 2.0.0 (unchanged, pinned).
 - `slowcooker.geometry`: flux-surface averages into TORAX's CHEASE geometry (in memory), with the
   poloidal flux from the rotational transform and an effective $F$ that gives the true $V'$;

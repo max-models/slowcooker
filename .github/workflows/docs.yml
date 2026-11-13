@@ -33,6 +33,7 @@ jobs:
         examples/index.html
         examples/gvec-geometry/index.html
         examples/nbi-heating/index.html
+        examples/tokamak-nbi/index.html
         example-scripts/index.html
         example-scripts/w7x-coupled/index.html
         api/slowcooker/index.html
