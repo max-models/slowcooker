@@ -1246,7 +1246,7 @@ wheels = [
 [[package]]
 name = "freeofcharge"
 version = "0.1.0"
-source = { git = "https://github.com/max-models/freeofcharge?branch=claude%2Fastra-plasma-physics-72n2n2#35753810173b73d94b4f44a26a215fa284bf70e1" }
+source = { git = "https://github.com/max-models/freeofcharge?branch=devel#d3bdbb3211aab65c5d3dc93c6d6f6342b29cb6a7" }
 dependencies = [
     { name = "cunumpy" },
     { name = "maybempi" },
@@ -4677,9 +4677,9 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "freeofcharge", git = "https://github.com/max-models/freeofcharge?branch=claude%2Fastra-plasma-physics-72n2n2" },
-    { name = "freeofcharge", extras = ["gvec"], marker = "extra == 'docs'", git = "https://github.com/max-models/freeofcharge?branch=claude%2Fastra-plasma-physics-72n2n2" },
-    { name = "freeofcharge", extras = ["gvec"], marker = "extra == 'gvec'", git = "https://github.com/max-models/freeofcharge?branch=claude%2Fastra-plasma-physics-72n2n2" },
+    { name = "freeofcharge", git = "https://github.com/max-models/freeofcharge?branch=devel" },
+    { name = "freeofcharge", extras = ["gvec"], marker = "extra == 'docs'", git = "https://github.com/max-models/freeofcharge?branch=devel" },
+    { name = "freeofcharge", extras = ["gvec"], marker = "extra == 'gvec'", git = "https://github.com/max-models/freeofcharge?branch=devel" },
     { name = "griffe", marker = "extra == 'docs'" },
     { name = "ipykernel", marker = "extra == 'docs'" },
     { name = "jupyterlab", marker = "extra == 'dev'" },
